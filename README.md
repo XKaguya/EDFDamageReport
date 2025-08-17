@@ -28,7 +28,8 @@
 
 ## 🙏 Special Thanks
 > @KittopiaCreator - Solved every question of mine.
-> EDF Discord Community
+> 
+> [EDF Discord](https://discord.gg/edf) Community
 
 ## 📜 Legal & Copyright Notice
 > [!IMPORTANT]
