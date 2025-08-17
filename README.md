@@ -8,7 +8,7 @@
 🟢 **Offline Mode**: Fully supported  
 🔵 **Online Mode**: Fully supported  
 ⚙️ **Platform**: PC version only  
-📦 **Dependency**: Standalone, EDFModLoader (future versions)
+📦 **Dependency**: Standalone, [EDFModLoader](https://github.com/BlueAmulet/EDFModLoader) (future versions)
 
 ---
 
