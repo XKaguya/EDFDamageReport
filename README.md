@@ -2,15 +2,11 @@
 
 > **Player Damage Analytics plugin**
 
----
-
 ## 🔧 Compatibility
 🟢 **Offline Mode**: Fully supported  
 🔵 **Online Mode**: Fully supported  
 ⚙️ **Platform**: PC version only  
 📦 **Dependency**: Standalone, [EDFModLoader](https://github.com/BlueAmulet/EDFModLoader) (future versions)
-
----
 
 ## ✨ Core Features
 ```diff
@@ -19,6 +15,12 @@
 • Mission summary reports (WIP)
 • Analytics for each weapon (WIP)
 ```
+
+## 📝 Usage Guide
+### Installation
+1. Download latest [release](https://github.com/XKaguya/EDFDamageReport/release/latest) `.dll` file
+2. Inject `MinHook.x64.dll` into `EDF6.exe` first
+3. Inject `EDFDamageReport.dll`
 
 ## 🤝 Contribution Guide
 1. 🐛 **Report Issues**: [Issues](https://github.com/XKaguya/EDFDamageReport/issues)  
