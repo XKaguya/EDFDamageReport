@@ -1,6 +1,5 @@
-# EDFDamageReport - Damage Analytics for Earth Defense Force 6
-
-> **Player Damage Analytics plugin**
+# EDFDamageReport
+> **Damage Analytics for Earth Defense Force 6**
 
 ## 🔧 Compatibility
 🟢 **Offline Mode**: Fully supported  
