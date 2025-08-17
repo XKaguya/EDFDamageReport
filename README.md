@@ -30,4 +30,14 @@
 > @KittopiaCreator - Solved every question of mine.
 > EDF Discord Community
 
-**EARTH DEFENSE FORCE is the registered trademark of SANDLOT and D3 PUBLISHER INC. This project is not affiliated with or endorsed by SANDLOT or D3 PUBLISHER INC in any way.**
+## 📜 Legal & Copyright Notice
+> [!IMPORTANT]
+> EDFDamageReport is an unofficial third-party plugin for Earth Defense Force 6.
+> 
+> Copyright © 2025 XKaguya. All rights reserved.
+> 
+> This software is not affiliated with, endorsed, sponsored, or approved by SANDLOT or D3 Publisher.
+> 
+> "Earth Defense Force" is a registered trademark of D3 Publisher.
+> 
+> All game copyrights remain with their respective owners.
