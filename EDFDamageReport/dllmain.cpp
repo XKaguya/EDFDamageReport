@@ -1,9 +1,7 @@
 ﻿#pragma once
 
-#include "pch.h"
 #include <fstream>
 #include <Windows.h>
-#include <MinHook.h>
 #include <cstdio>
 #include <cstdint>
 #include <exception>
@@ -20,10 +18,31 @@
 #include <vector>
 #include <algorithm>
 #include <codecvt>
+#include <sstream>
 
+#include "MinHook.h"
 #include "Memory.h"
 #include "Utils.h"
 #include "Player.h"
+#include "ImImporter.h"
+#include "PluginAPI.h"
+
+extern "C" {
+    BOOL __declspec(dllexport) EML4_Load(PluginInfo* pluginInfo) {
+        return false;
+    }
+
+    BOOL __declspec(dllexport) EML5_Load(PluginInfo* pluginInfo) {
+        return false;
+    }
+
+    BOOL __declspec(dllexport) EML6_Load(PluginInfo* pluginInfo) {
+        pluginInfo->infoVersion = PluginInfo::MaxInfoVer;
+        pluginInfo->name = "EDF6 Damage Summary";
+        pluginInfo->version = PLUG_VER(1, 0, 0, 0);
+        return true;
+    }
+}
 
 typedef __int64 (__fastcall* DispatchDamage_Type)(__int64 damageTarget, __int64 damageMessage);
 typedef __int64(__fastcall* InternalExit_Type)(__int64 a1, MissionResult missionResult);
@@ -42,10 +61,9 @@ CreatePlayer_Type OriginalCreatePlayer = nullptr;
 SignatureTable g_SignatureTable;
 std::vector<uintptr_t> g_playerPointers;
 PlayerList g_playerList;
-DamageSummary g_damageSummary(&g_playerList);
+RecentAttackLogger g_attackLogger;
+DamageSummary g_damageSummary(&g_playerList, &g_attackLogger);
 bool g_enableDebugOutput = false;
-bool g_hasGameEnded = false;
-bool g_hasGameStarted = false;
 
 ENUM_MAP(MissionResult)
 
@@ -86,14 +104,13 @@ uintptr_t GetPlayer(int playerID)
         uintptr_t playerPtr = MissionContext + BASE_OFFSET + (playerID * PLAYER_STRUCT_SIZE);
         uintptr_t playerPointer = *(uintptr_t*)playerPtr;
 
-        snprintf(logBuffer, sizeof(logBuffer),
-            "[HOOK] Debug Info: Mgr=0x%llX, ASImp=0x%llX, Ctx=0x%llX, Player[%d]=0x%llX",
+        DebugOutputFormat("[HOOK] Debug Info: Mgr=0x%llX, ASImp=0x%llX, Ctx=0x%llX, Player[%d]=0x%llX",
             (unsigned long long)MissionMgr,
             (unsigned long long)MissionScriptASImplement,
             (unsigned long long)MissionContext,
             playerID,
-            (unsigned long long)playerPointer);
-        OutputMessage(logBuffer);
+            (unsigned long long)playerPointer
+        );
 
         return playerPointer;
     }
@@ -125,110 +142,10 @@ void GetAllPlayers()
     }
 }
 
-// From Discord @KittopiaCreator. Much thanks.
-std::string AttemptReadRTTI(uintptr_t pointer) {
-    const uintptr_t currentFunctionAddr = reinterpret_cast<uintptr_t>(&AttemptReadRTTI);
-    char debugBuffer[512];
-
-    snprintf(debugBuffer, sizeof(debugBuffer),
-        "[RTTI DEBUG] Function address: 0x%p, Input pointer: 0x%p",
-        reinterpret_cast<void*>(currentFunctionAddr),
-        reinterpret_cast<void*>(pointer));
-    DEBUG_OUTPUT(debugBuffer);
-
-    try {
-        if (pointer == 0) {
-            DEBUG_OUTPUT("[RTTI] Input pointer is NULL");
-            return "NULL";
-        }
-
-        uintptr_t ptr_obj_locator = *(uintptr_t*)pointer - 8;
-        snprintf(debugBuffer, sizeof(debugBuffer),
-            "[RTTI DEBUG] RTTI Locator: 0x%p",
-            reinterpret_cast<void*>(ptr_obj_locator));
-        DEBUG_OUTPUT(debugBuffer);
-
-        if (ptr_obj_locator == 0) {
-            DEBUG_OUTPUT("[RTTI] RTTI Locator is NULL");
-            return "NULL";
-        }
-
-        uintptr_t rtti_base = *(uintptr_t*)ptr_obj_locator;
-        snprintf(debugBuffer, sizeof(debugBuffer),
-            "[RTTI DEBUG] RTTI Base Pointer: 0x%p",
-            reinterpret_cast<void*>(rtti_base));
-        DEBUG_OUTPUT(debugBuffer);
-
-        unsigned int type_descriptor_offset = *(unsigned int*)(rtti_base + 0xC);
-        snprintf(debugBuffer, sizeof(debugBuffer),
-            "[RTTI DEBUG] Type Descriptor Offset: 0x%X",
-            type_descriptor_offset);
-        DEBUG_OUTPUT(debugBuffer);
-
-        uintptr_t base_offset = *(uintptr_t*)(rtti_base + 0x14);
-        snprintf(debugBuffer, sizeof(debugBuffer),
-            "[RTTI DEBUG] Base Offset: 0x%llX",
-            static_cast<unsigned long long>(base_offset));
-        DEBUG_OUTPUT(debugBuffer);
-
-        uintptr_t* class_name_ptr = (uintptr_t*)(rtti_base - base_offset + type_descriptor_offset + 0x10 + 0x04);
-        snprintf(debugBuffer, sizeof(debugBuffer),
-            "[RTTI DEBUG] Class Name Pointer Calc: "
-            "rtti_base(0x%p) - base_offset(0x%llX) + td_offset(0x%X) + 0x10 + 0x04 = 0x%p",
-            reinterpret_cast<void*>(rtti_base),
-            static_cast<unsigned long long>(base_offset),
-            type_descriptor_offset,
-            reinterpret_cast<void*>(class_name_ptr));
-        DEBUG_OUTPUT(debugBuffer);
-
-        if (class_name_ptr == nullptr || *class_name_ptr == 0) {
-            snprintf(debugBuffer, sizeof(debugBuffer),
-                "[RTTI] Class name pointer is invalid: 0x%p",
-                reinterpret_cast<void*>(class_name_ptr));
-            DEBUG_OUTPUT(debugBuffer);
-            return "NULL";
-        }
-
-        char* str = (char*)class_name_ptr;
-        std::string rawName = str;
-        snprintf(debugBuffer, sizeof(debugBuffer),
-            "[RTTI DEBUG] Raw class name: %s",
-            rawName.c_str());
-        DEBUG_OUTPUT(debugBuffer);
-
-        size_t atPos = rawName.find("@");
-        std::string prettifiedName = (atPos != std::string::npos)
-            ? rawName.substr(0, atPos)
-            : rawName;
-
-        for (size_t i = 0; i < prettifiedName.size(); ++i) {
-            if (static_cast<unsigned char>(prettifiedName[i]) < 0x20 ||
-                static_cast<unsigned char>(prettifiedName[i]) > 0x7E) {
-                prettifiedName = prettifiedName.substr(0, i);
-                break;
-            }
-        }
-
-        snprintf(debugBuffer, sizeof(debugBuffer),
-            "[RTTI] Final class name: %s",
-            prettifiedName.c_str());
-        DEBUG_OUTPUT(debugBuffer);
-
-        return prettifiedName;
-    }
-    catch (...) {
-        DEBUG_OUTPUT("[RTTI ERROR] Exception caught during processing");
-        return "EXCEPTION";
-    }
-}
-
 __int64 __fastcall Hooked_InternalInitialize(__int64 a1, int a2)
 {
-    char logBuffer[50];
-    snprintf(logBuffer, sizeof(logBuffer), "[HOOK] New mission has started.");
-    OutputMessage(logBuffer);
+    OutputMessage("[HOOK] New mission has started.");
 
-    g_hasGameStarted = true;
     g_damageSummary.resetAll();
     g_playerList.resetPlayers();
 
@@ -243,10 +160,9 @@ void __fastcall Hooked_CreatePlayer(__int64 a1, void* a2, unsigned int a3)
 
 __int64 __fastcall Hooked_InternalExit(__int64 a1, MissionResult missionResult)
 {
-    char logBuffer[100];
+    DebugOutputFormat("[HOOK] Game has ended with result: %s", MissionResultToString(missionResult));
+    OutputMessage(g_damageSummary.formatAllDamagesSummary().c_str());
 
-    snprintf(logBuffer, sizeof(logBuffer), "[HOOK] Game has ended with result: %s", MissionResultToString(missionResult));
-    OutputMessage(logBuffer);
     return OriginalInternalExit(a1, missionResult);
 }
 
@@ -255,7 +171,7 @@ __int64 __fastcall Hooked_DispatchDamage(__int64 damageTarget, __int64 damageMes
     // Safety protocol
     if (sceneObjectTypeDescriptor == 0 || soldierBaseTypeDescriptor == 0)
     {
-        OutputMessage("sceneObjectTypeDescriptor or soldierBaseTypeDescriptor is null. The offset mismatch.");
+        OutputMessage("[HOOK] FATAL ERROR: sceneObjectTypeDescriptor or soldierBaseTypeDescriptor is null. The offset mismatch.");
         return OriginalDispatchDamage(damageTarget, damageMessage);
     }
 
@@ -277,9 +193,14 @@ __int64 __fastcall Hooked_DispatchDamage(__int64 damageTarget, __int64 damageMes
         return OriginalDispatchDamage(damageTarget, damageMessage);
     }
 
-    char logBuffer[1024];
-    snprintf(logBuffer, sizeof(logBuffer),
-        "[HOOK] Target Pointer: 0x%p | Damage Message Pointer: 0x%p | Damage Dealer Pointer: 0x%p | Damage Value: %f | Target Name: %s",
+    // Is Friendly Damage.
+    bool isFriendly = std::find(g_playerPointers.begin(), g_playerPointers.end(), damageTarget) != g_playerPointers.end();
+    if (isFriendly)
+    {
+        g_damageSummary.addFriendlyDamage(reinterpret_cast<uintptr_t>(damageDealerPointer), damageTarget, damageValue);
+	}
+
+    DebugOutputFormat("[HOOK] Target Pointer: 0x%p | Damage Message Pointer: 0x%p | Damage Dealer Pointer: 0x%p | Damage Value: %f | Target Name: %s",
         reinterpret_cast<void*>(damageTarget),
         reinterpret_cast<void*>(damageMessage),
         damageDealerPointer,
@@ -287,10 +208,7 @@ __int64 __fastcall Hooked_DispatchDamage(__int64 damageTarget, __int64 damageMes
         targetName.c_str()
     );
 
-    OutputMessage(logBuffer);
-
-    g_damageSummary.addDamage((uintptr_t)damageDealerPointer, damageValue);
-    OutputMessage(g_damageSummary.formatAllDamages().c_str());
+    g_damageSummary.addDamage((uintptr_t)damageDealerPointer, damageTarget, damageValue);
 
     return OriginalDispatchDamage(damageTarget, damageMessage);
 }
@@ -306,6 +224,13 @@ void SwitchHooks(BOOL disable)
     baseAddress = (uintptr_t)hModule;
     sceneObjectTypeDescriptor = baseAddress + 0x2006450;
     soldierBaseTypeDescriptor = baseAddress + 0x2006428;
+
+	ASSERT(sceneObjectTypeDescriptor != 0);
+    ASSERT(soldierBaseTypeDescriptor != 0);
+    ASSERT(g_SignatureTable.DispatchDamagePointer != 0);
+    ASSERT(g_SignatureTable.InternalExitPointer != 0);
+    ASSERT(g_SignatureTable.InternalInitializePointer != 0);
+    ASSERT(g_SignatureTable.CreatePlayerPointer != 0);
 
 	int hookCount = 4;
     HookEntry hooks[] = {
@@ -434,11 +359,13 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
             OutputMessage("[HOOK] DLL_PROCESS_ATTACH");
             PreInit();
             SwitchHooks(false);
+            CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)Start, NULL, NULL, NULL);
             break;
         }
         case DLL_PROCESS_DETACH:
             OutputMessage("[HOOK] DLL_PROCESS_DETACH");
             SwitchHooks(true);
+			Exit();
             MH_Uninitialize();
             break;
     }
