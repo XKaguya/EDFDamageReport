@@ -5,21 +5,25 @@
 🟢 **Offline Mode**: Fully supported  
 🔵 **Online Mode**: Fully supported  
 ⚙️ **Platform**: PC version only  
-📦 **Dependency**: Standalone, [EDFModLoader](https://github.com/BlueAmulet/EDFModLoader) (future versions)
+📦 **Dependency**: [EDFModLoader](https://github.com/BlueAmulet/EDFModLoader)
 
 ## ✨ Core Features
 ```diff
 • Live damage telemetry during missions
 • Automatic per-player statistics collection
-• Mission summary reports (WIP)
+• Friendly fire supports
+• Mission summary reports
 • Analytics for each weapon (WIP)
 ```
 
+## Screenshot
+<img width="2287" height="1135" alt="image" src="https://github.com/user-attachments/assets/7a735e2e-36a2-49d9-ba40-acfe5e0cf45c" />
+
 ## 📝 Usage Guide
 ### Installation
+**You should have [EDFModLoader](https://github.com/BlueAmulet/EDFModLoader) installed first.**
 1. Download latest [release](https://github.com/XKaguya/EDFDamageReport/release/latest) `.dll` file
-2. Inject `MinHook.x64.dll` into `EDF6.exe` first
-3. Inject `EDFDamageReport.dll`
+2. Drop `EDFDamageReport.dll` into `Mods\Plugins`.
 
 ## 🤝 Contribution Guide
 1. 🐛 **Report Issues**: [Issues](https://github.com/XKaguya/EDFDamageReport/issues)  
