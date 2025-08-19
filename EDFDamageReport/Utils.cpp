@@ -54,11 +54,11 @@ void ClearLogFile()
 
 // From Discord @KittopiaCreator. Much thanks.
 std::string AttemptReadRTTI(uintptr_t pointer) {
-    DebugOutputFormat("[RTTI DEBUG] Input pointer: 0x%p",
-        reinterpret_cast<void*>(pointer)
-    );
-
     try {
+        DebugOutputFormat("[RTTI DEBUG] Input pointer: 0x%p",
+            reinterpret_cast<void*>(pointer)
+        );
+
         if (pointer == 0) {
             DEBUG_OUTPUT("[RTTI] Input pointer is NULL");
             return "NULL";
@@ -137,6 +137,6 @@ std::string AttemptReadRTTI(uintptr_t pointer) {
     }
     catch (...) {
         DEBUG_OUTPUT("[RTTI ERROR] Exception caught during processing");
-        return "EXCEPTION";
+        return "Unknown";
     }
 }
