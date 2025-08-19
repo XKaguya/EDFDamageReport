@@ -15,6 +15,7 @@
 #include "Utils.h"
 #include "MinHook.h"
 #include "Player.h"
+#include "Memory.h"
 
 HWND hwnd = nullptr;
 ID3D11Device* d3dDevice = nullptr;
@@ -33,6 +34,7 @@ void MainLoop();
 
 extern DamageSummary g_damageSummary;
 extern uintptr_t baseAddress;
+extern SignatureTable g_SignatureTable;
 
 typedef HRESULT(WINAPI* D3D11CreateDeviceFn)(
     IDXGIAdapter* pAdapter,
@@ -213,15 +215,13 @@ void InitDirectXDeviceHook()
 
 void InitRadarHook()
 {
-    void* pUpdateRadar = reinterpret_cast<LPVOID>(baseAddress + 0x082b4d0);
-
-    if (MH_CreateHook(pUpdateRadar, &Hook_UpdateRadar, reinterpret_cast<LPVOID*>(&OriginalUpdateRadar)) != MH_OK)
+    if (MH_CreateHook((LPVOID)g_SignatureTable.UpdateRadarPointer, &Hook_UpdateRadar, reinterpret_cast<LPVOID*>(&OriginalUpdateRadar)) != MH_OK)
     {
         DebugOutputFormat("Failed to create hook for UpdateRadar!");
         return;
     }
 
-    if (MH_EnableHook(pUpdateRadar) != MH_OK)
+    if (MH_EnableHook((LPVOID)g_SignatureTable.UpdateRadarPointer) != MH_OK)
     {
         DebugOutputFormat("Failed to enable hook for UpdateRadar!");
         return;

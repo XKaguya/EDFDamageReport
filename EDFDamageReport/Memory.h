@@ -16,10 +16,12 @@ struct SignatureTable {
     const char* InternalExit;
     const char* InternalInitialize;
     const char* CreatePlayer;
+	const char* UpdateRadar;
     uintptr_t DispatchDamagePointer;
     uintptr_t InternalExitPointer;
     uintptr_t InternalInitializePointer;
     uintptr_t CreatePlayerPointer;
+	uintptr_t UpdateRadarPointer;
 };
 
 struct MemoryPattern {

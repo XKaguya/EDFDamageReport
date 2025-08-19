@@ -330,23 +330,26 @@ void SwitchHooks(BOOL disable)
 void PreInit()
 {
     g_SignatureTable = {
-        "48 8B C4 48 89 58 18 55 56 57 41 54 41 55 41 56 41 57 48 8D A8 38 FF FF FF 48 81 EC 90 01 00 00 0F 29 70 B8 0F 29 78 A8 44 0F 29 40 98 44 0F 29 48 88 48 8B 05 EF 73 AA 01 48 33 C4 48 89 45 40 4C 8B EA 48 8B F9 F6 41 18 04 0F 85 A5 09 00 00 C6 81 E9 02 00 00 00 48 8B 59 30 33 D2 4D 8D 65 10 4D 8D 4D 10 48 85 DB 74 2C 4C 8B 51 28 F0 FF 43 0C", // DispatchDamage
-        "48 89 5C 24 08 57 48 83 EC 20 48 8B D9 8B FA 48 8D 0D 4A 91 F5 01 E8 75 ED F3 00 48 8B 0D 16 4C ED 01 33 D2 E8 D7 34 5A 00 48 8B 83 E8 00 00 00 33 D2 C7 80 B8 02 00 00 03 00 00 00 48 8B 83 E8 00 00 00 89 B8 B4 02 00 00 48 8B 0D 70 4A ED 01 E8 0B 51 5D 00", // Internal_Exit
+        "48 8B C4 48 89 58 ?? 55 56 57 41 54 41 55 41 56 41 57 48 8D A8 ?? ?? ?? ?? 48 81 EC 90 01 00 00 0F 29 70 ?? 0F 29 78 ?? 44 0F 29 40 ?? 44 0F 29 48 ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 40 4C 8B EA 48 8B F9 F6 41 ?? 04 0F 85 ?? ?? ?? ?? C6 81 ?? ?? ?? ?? 00 48 8B 59 ?? 33 D2 4D 8D 65 ?? 4D 8D 4D ?? 48 85 DB 74 2C 4C 8B 51 ?? F0 FF 43 ?? ", // DispatchDamage
+        "48 89 5C 24 08 57 48 83 EC 20 48 8B D9 8B FA 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 8B 0D ?? ?? ?? ?? 33 D2 E8 ?? ?? ?? ?? 48 8B 83 ?? ?? ?? ?? 33 D2 C7 80 ?? ?? ?? ?? 03 00 00 00 48 8B 83 ?? ?? ?? ?? 89 B8 ?? ?? ?? ?? 48 8B 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? ", // Internal_Exit
         "48 8B 49 08 FF C2 E9", // Internal_Initialize
         "48 89 5C 24 20 55 56 57 41 56 41 57 48 8D 6C 24 E0 48 81 EC 20 01 00 00 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 10 45 8B F0 48 8B F9", // CreatePlayer
+		"55 56 57 41 54 41 55 41 56 41 57 48 8D A8 ?? ?? ?? ?? 48 81 EC 20 02 00 00 0F 29 70 ?? 0F 29 78 ?? 4C 8B EA 4C 8B F1 80 B9 ?? ?? ?? ?? 00 74 15 C6 81 ?? ?? ?? ?? 00 80 B9 ?? ?? ?? ?? 00 74 2A", // UpdateRadar
     };
 
     g_SignatureTable.DispatchDamagePointer = ScanSignature(GetCurrentProcess(), "EDF.dll", g_SignatureTable.DispatchDamage);
     g_SignatureTable.InternalExitPointer = ScanSignature(GetCurrentProcess(), "EDF.dll", g_SignatureTable.InternalExit);
     g_SignatureTable.InternalInitializePointer = ScanSignature(GetCurrentProcess(), "EDF.dll", g_SignatureTable.InternalInitialize);
     g_SignatureTable.CreatePlayerPointer = ScanSignature(GetCurrentProcess(), "EDF.dll", g_SignatureTable.CreatePlayer);
+	g_SignatureTable.UpdateRadarPointer = ScanSignature(GetCurrentProcess(), "EDF.dll", g_SignatureTable.UpdateRadar);
 
     char buf[256];
     snprintf(buf, 256, "[HOOK] Pointer based on signatures: 0x%p 0x%p 0x%p 0x%p",
         g_SignatureTable.DispatchDamagePointer,
         g_SignatureTable.InternalExitPointer,
         g_SignatureTable.InternalInitializePointer,
-        g_SignatureTable.CreatePlayerPointer
+        g_SignatureTable.CreatePlayerPointer,
+		g_SignatureTable.UpdateRadarPointer
     );
     OutputMessage(buf);
 }
